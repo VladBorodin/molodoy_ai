@@ -1,8 +1,18 @@
-from fastapi import FastAPI
+from pathlib import Path
 
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from app import models
 from app.database import Base
 from app.database import engine
-from app import models
+from app.routers.admin_router import router as admin_router
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = BASE_DIR / "static"
+INDEX_HTML_PATH = FRONTEND_DIR / "index.html"
 
 
 app = FastAPI(
@@ -17,11 +27,18 @@ def startup():
 	Base.metadata.create_all(bind=engine)
 
 
+app.include_router(admin_router)
+
+app.mount(
+	"/static",
+	StaticFiles(directory=FRONTEND_DIR),
+	name="static"
+)
+
+
 @app.get("/")
-def read_root():
-	return {
-		"message": "Molodoy AI backend is running"
-	}
+def read_index():
+	return FileResponse(INDEX_HTML_PATH)
 
 
 @app.get("/health")

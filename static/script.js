@@ -4,8 +4,8 @@ const questionForm = document.getElementById("questionForm");
 const questionInput = document.getElementById("questionInput");
 const statusText = document.getElementById("statusText");
 
-const catIdleImagePath = "./assets/cat_idle.png";
-const catTalkingImagePath = "./assets/cat_talking.png";
+const catIdleImagePath = "/static/assets/cat_idle.png";
+const catTalkingImagePath = "/static/assets/cat_talking.png";
 
 questionForm.addEventListener("submit", async function (event) {
 	event.preventDefault();
