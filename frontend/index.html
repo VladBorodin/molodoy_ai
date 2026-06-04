@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Молодой AI</title>
+	<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+	<div class="app">
+		<header class="app-header">
+			<p class="app-kicker">Локальный кото-ИИ</p>
+			<h1>How do you do, fellow kitts?</h1>
+			<p class="app-subtitle">
+				Задай вопрос о коте Молодом, а система найдет ответ в дневниковых записях.
+			</p>
+		</header>
+
+		<main class="chat-layout">
+			<section class="cat-section" aria-label="Кот Молодой">
+				<img
+					id="catImage"
+					class="cat-image"
+					src="./assets/cat_idle.png"
+					alt="Кот Молодой со скейтом"
+				>
+			</section>
+
+			<section class="chat-section" aria-label="Чат">
+				<div class="answer-card">
+					<div class="answer-label">Ответ ИИ</div>
+					<p id="answerText" class="answer-text">
+						Привет. Я Молодой. Спрашивай, человек.
+					</p>
+				</div>
+
+				<form id="questionForm" class="question-form">
+					<label class="question-label" for="questionInput">
+						Вопрос пользователя
+					</label>
+
+					<div class="question-row">
+						<input
+							id="questionInput"
+							class="question-input"
+							type="text"
+							placeholder="Например: когда появился Молодой?"
+							autocomplete="off"
+						>
+
+						<button class="question-button" type="submit">
+							Спросить
+						</button>
+					</div>
+				</form>
+
+				<p id="statusText" class="status-text">
+					Молодой ждёт вопрос.
+				</p>
+			</section>
+		</main>
+	</div>
+
+	<script src="./script.js"></script>
+</body>
+</html>
