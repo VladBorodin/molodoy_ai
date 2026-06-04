@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: molodoy-ai-postgres
+    environment:
+      POSTGRES_DB: molodoy_ai
+      POSTGRES_USER: molodoy_user
+      POSTGRES_PASSWORD: molodoy_password
+    ports:
+      - "15432:5432"
+    volumes:
+      - molodoy_ai_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  molodoy_ai_postgres_data:
