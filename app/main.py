@@ -8,6 +8,7 @@ from app import models
 from app.database import Base
 from app.database import engine
 from app.routers.admin_router import router as admin_router
+from app.routers.chat_router import router as chat_router
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +29,7 @@ def startup():
 
 
 app.include_router(admin_router)
+app.include_router(chat_router)
 
 app.mount(
 	"/static",

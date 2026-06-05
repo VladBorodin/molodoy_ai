@@ -20,3 +20,12 @@ class KnowledgeEntryResponse(BaseModel):
 
 	class Config:
 		from_attributes = True
+
+
+class ChatAskRequest(BaseModel):
+	question: str = Field(min_length=1)
+
+
+class ChatAskResponse(BaseModel):
+	answer: str
+	context_chunks: list[str]
