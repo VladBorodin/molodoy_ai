@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Админка - Молодой AI</title>
+	<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+	<div class="app admin-app">
+		<header class="app-header admin-header">
+			<div>
+				<p class="app-kicker">Панель администратора</p>
+				<h1>Дневник Молодого</h1>
+				<p class="app-subtitle">
+					Добавляй факты, истории и заметки о коте. Backend сохранит запись и разобьет ее на чанки.
+				</p>
+			</div>
+
+			<nav class="admin-nav">
+				<a href="/">Чат</a>
+				<a href="/docs" target="_blank">Swagger</a>
+			</nav>
+		</header>
+
+		<main class="admin-layout">
+			<section class="admin-card">
+				<form id="entryForm" class="admin-form">
+					<div class="form-group">
+						<label for="entryTitle">Название записи</label>
+						<input
+							id="entryTitle"
+							type="text"
+							placeholder="Например: Появление Молодого"
+							autocomplete="off"
+							required
+						>
+					</div>
+
+					<div class="form-group">
+						<label for="entryContent">Текст записи</label>
+						<textarea
+							id="entryContent"
+							rows="14"
+							placeholder="Например: Осенью 2019 года у нас появился кот Молодой..."
+							required
+						></textarea>
+					</div>
+
+					<div class="admin-actions">
+						<button id="saveButton" type="submit">
+							Сохранить запись
+						</button>
+
+						<button id="clearButton" type="button" class="secondary-button">
+							Очистить
+						</button>
+					</div>
+				</form>
+			</section>
+
+			<aside class="admin-card admin-result-card">
+				<h2>Результат</h2>
+
+				<p id="adminStatusText" class="admin-status-text">
+					Запись еще не отправлялась.
+				</p>
+
+				<div id="adminResult" class="admin-result is-hidden">
+					<div class="result-row">
+						<span>ID записи</span>
+						<strong id="resultEntryId">-</strong>
+					</div>
+
+					<div class="result-row">
+						<span>Создано чанков</span>
+						<strong id="resultChunksCount">-</strong>
+					</div>
+				</div>
+
+				<div class="admin-hint">
+					<h3>Что происходит после сохранения?</h3>
+					<p>
+						Текст сохраняется в таблицу knowledge_entries, затем режется на чанки
+						и сохраняется в knowledge_chunks.
+					</p>
+				</div>
+			</aside>
+		</main>
+	</div>
+
+	<script src="/static/admin.js"></script>
+</body>
+</html>
