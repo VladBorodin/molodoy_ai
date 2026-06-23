@@ -13,18 +13,32 @@
 				<p class="app-kicker">Панель администратора</p>
 				<h1>Дневник Молодого</h1>
 				<p class="app-subtitle">
-					Добавляй факты, истории и заметки о коте. Backend сохранит запись и разобьет ее на чанки.
+					Добавляй, редактируй и удаляй записи базы знаний. Backend сам сохранит текст и пересоберёт чанки.
 				</p>
 			</div>
 
 			<nav class="admin-nav">
 				<a href="/">Чат</a>
 				<a href="/docs" target="_blank">Swagger</a>
+				<button id="logoutButton" type="button" class="admin-nav-button">
+					Выйти
+				</button>
 			</nav>
 		</header>
 
 		<main class="admin-layout">
 			<section class="admin-card">
+				<div class="admin-card-header">
+					<div>
+						<p class="app-kicker">Редактор записи</p>
+						<h2 id="formTitle">Новая запись</h2>
+					</div>
+
+					<button id="newEntryButton" type="button" class="secondary-button">
+						Новая запись
+					</button>
+				</div>
+
 				<form id="entryForm" class="admin-form">
 					<div class="form-group">
 						<label for="entryTitle">Название записи</label>
@@ -47,6 +61,11 @@
 						></textarea>
 					</div>
 
+					<label class="checkbox-row">
+						<input id="entryIsActive" type="checkbox" checked>
+						<span>Запись активна и участвует в поиске</span>
+					</label>
+
 					<div class="admin-actions">
 						<button id="saveButton" type="submit">
 							Сохранить запись
@@ -59,32 +78,43 @@
 				</form>
 			</section>
 
-			<aside class="admin-card admin-result-card">
-				<h2>Результат</h2>
+			<aside class="admin-side">
+				<section class="admin-card admin-result-card">
+					<h2>Результат</h2>
 
-				<p id="adminStatusText" class="admin-status-text">
-					Запись еще не отправлялась.
-				</p>
-
-				<div id="adminResult" class="admin-result is-hidden">
-					<div class="result-row">
-						<span>ID записи</span>
-						<strong id="resultEntryId">-</strong>
-					</div>
-
-					<div class="result-row">
-						<span>Создано чанков</span>
-						<strong id="resultChunksCount">-</strong>
-					</div>
-				</div>
-
-				<div class="admin-hint">
-					<h3>Что происходит после сохранения?</h3>
-					<p>
-						Текст сохраняется в таблицу knowledge_entries, затем режется на чанки
-						и сохраняется в knowledge_chunks.
+					<p id="adminStatusText" class="admin-status-text">
+						Админка готова к работе.
 					</p>
-				</div>
+
+					<div id="adminResult" class="admin-result is-hidden">
+						<div class="result-row">
+							<span>ID записи</span>
+							<strong id="resultEntryId">-</strong>
+						</div>
+
+						<div class="result-row">
+							<span>Создано чанков</span>
+							<strong id="resultChunksCount">-</strong>
+						</div>
+					</div>
+				</section>
+
+				<section class="admin-card entries-card">
+					<div class="entries-header">
+						<div>
+							<p class="app-kicker">База знаний</p>
+							<h2>Записи</h2>
+						</div>
+
+						<button id="reloadEntriesButton" type="button" class="secondary-button">
+							Обновить
+						</button>
+					</div>
+
+					<div id="entriesList" class="entries-list">
+						<p class="empty-list-text">Загружаю записи...</p>
+					</div>
+				</section>
 			</aside>
 		</main>
 	</div>
