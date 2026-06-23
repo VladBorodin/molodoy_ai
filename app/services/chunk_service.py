@@ -61,7 +61,14 @@ class ChunkService:
 
 		self._flush_current_chunk(chunks, current_units)
 
-		return self._remove_duplicate_chunks(chunks)
+		unique_chunks = self._remove_duplicate_chunks(chunks)
+
+		return self._merge_small_tail_chunk(
+			chunks=unique_chunks,
+			chunk_size=chunk_size,
+			min_tail_length=300,
+			max_extra_length=200
+		)
 
 	def _normalize_text(self, text: str) -> str:
 		text = text.replace("\r\n", "\n").replace("\r", "\n")
@@ -228,3 +235,53 @@ class ChunkService:
 			unique_chunks.append(normalized_chunk)
 
 		return unique_chunks
+	
+	def _merge_small_tail_chunk(
+		self,
+		chunks: list[str],
+		chunk_size: int,
+		min_tail_length: int,
+		max_extra_length: int
+	) -> list[str]:
+		if len(chunks) < 2:
+			return chunks
+
+		last_chunk = chunks[-1]
+		previous_chunk = chunks[-2]
+
+		if len(last_chunk) >= min_tail_length:
+			return chunks
+
+		tail_without_overlap = self._remove_repeated_prefix(
+			previous_chunk=previous_chunk,
+			last_chunk=last_chunk
+		)
+
+		if not tail_without_overlap:
+			return chunks[:-1]
+
+		merged_chunk = f"{previous_chunk} {tail_without_overlap}".strip()
+		max_allowed_length = chunk_size + max_extra_length
+
+		if len(merged_chunk) <= max_allowed_length:
+			return chunks[:-2] + [merged_chunk]
+
+		return chunks
+
+	def _remove_repeated_prefix(
+		self,
+		previous_chunk: str,
+		last_chunk: str
+	) -> str:
+		previous_sentences = set(self._split_into_sentences(previous_chunk))
+		last_sentences = self._split_into_sentences(last_chunk)
+
+		clean_sentences = []
+
+		for sentence in last_sentences:
+			if not clean_sentences and sentence in previous_sentences:
+				continue
+
+			clean_sentences.append(sentence)
+
+		return " ".join(clean_sentences).strip()
