@@ -4,13 +4,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+from app.settings import settings
 
-DATABASE_URL = os.getenv(
-	"DATABASE_URL",
-	"postgresql+psycopg2://molodoy_user:molodoy_password@localhost:15432/molodoy_ai"
-)
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.database_url)
 
 SessionLocal = sessionmaker(
 	autocommit=False,

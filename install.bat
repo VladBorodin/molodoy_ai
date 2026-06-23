@@ -15,6 +15,19 @@ if errorlevel 1 (
 )
 
 echo.
+echo Проверка .env файла...
+if not exist .env (
+	if exist .env.example (
+		copy .env.example .env
+		echo Файл .env создан из .env.example
+	) else (
+		echo Файл .env.example не найден.
+	)
+) else (
+	echo Файл .env уже существует.
+)
+
+echo.
 echo Создание виртуального окружения...
 if not exist .venv (
 	python -m venv .venv

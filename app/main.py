@@ -9,6 +9,7 @@ from app.database import Base
 from app.database import engine
 from app.routers.admin_router import router as admin_router
 from app.routers.chat_router import router as chat_router
+from app.settings import settings
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -17,9 +18,10 @@ INDEX_HTML_PATH = FRONTEND_DIR / "index.html"
 
 
 app = FastAPI(
-	title="Molodoy AI",
+	title=settings.app_name,
 	description="Простое приложение для вопросно-ответного поиска по дневнику кота Молодого.",
-	version="0.1.0"
+	version="0.1.0",
+	debug=settings.app_debug
 )
 
 

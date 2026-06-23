@@ -1,14 +1,20 @@
 import re
 
+from app.settings import settings
 
 class ChunkService:
 	def split_text(
 		self,
 		text: str,
-		chunk_size: int = 900,
-		overlap_sentences: int = 1,
-		max_overlap_length: int = 220
+		chunk_size: int | None = None,
+		overlap_sentences: int | None = None,
+		max_overlap_length: int | None = None,
+		min_tail_length: int | None = None
 	) -> list[str]:
+		chunk_size = chunk_size or settings.chunk_size
+		overlap_sentences = overlap_sentences or settings.chunk_overlap_sentences
+		max_overlap_length = max_overlap_length or settings.chunk_max_overlap_length
+		min_tail_length = min_tail_length or settings.chunk_min_tail_length
 		normalized_text = self._normalize_text(text)
 
 		if not normalized_text:
@@ -66,7 +72,7 @@ class ChunkService:
 		return self._merge_small_tail_chunk(
 			chunks=unique_chunks,
 			chunk_size=chunk_size,
-			min_tail_length=300,
+			min_tail_length=min_tail_length,
 			max_extra_length=200
 		)
 
