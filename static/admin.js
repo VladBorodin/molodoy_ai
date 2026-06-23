@@ -8,6 +8,14 @@ const adminResult = document.getElementById("adminResult");
 const resultEntryId = document.getElementById("resultEntryId");
 const resultChunksCount = document.getElementById("resultChunksCount");
 
+const adminTokenStorageKey = "molodoy_admin_token";
+const adminToken = localStorage.getItem(adminTokenStorageKey);
+
+if (!adminToken) {
+	alert("Нужно войти как администратор.");
+	window.location.href = "/";
+}
+
 entryForm.addEventListener("submit", async function (event) {
 	event.preventDefault();
 
@@ -37,9 +45,7 @@ async function createKnowledgeEntry(title, content) {
 
 		const response = await fetch("/admin/entries", {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json"
-			},
+			headers: getAdminHeaders(),
 			body: JSON.stringify({
 				title: title,
 				content: content
@@ -47,6 +53,14 @@ async function createKnowledgeEntry(title, content) {
 		});
 
 		if (!response.ok) {
+
+			if (response.status === 401 || response.status === 403) {
+				localStorage.removeItem(adminTokenStorageKey);
+				alert("Сессия администратора истекла. Войдите снова.");
+				window.location.href = "/";
+				return;
+			}
+
 			const errorText = await response.text();
 			throw new Error(errorText);
 		}
@@ -92,4 +106,11 @@ function showStatus(message, type) {
 	if (type === "error") {
 		adminStatusText.classList.add("admin-status-error");
 	}
+}
+
+function getAdminHeaders() {
+	return {
+		"Content-Type": "application/json",
+		"Authorization": "Bearer " + adminToken
+	};
 }

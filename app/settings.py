@@ -77,6 +77,7 @@ class Settings:
 
 	auth_secret_key: str = get_string("AUTH_SECRET_KEY", "development_secret_key")
 	auth_access_token_expire_minutes: int = get_int("AUTH_ACCESS_TOKEN_EXPIRE_MINUTES", 1440)
+	auth_algorithm: str = get_string("AUTH_ALGORITHM", "HS256")
 	initial_admin_username: str = get_string("INITIAL_ADMIN_USERNAME", "admin")
 	initial_admin_password: str = get_string("INITIAL_ADMIN_PASSWORD", "admin")
 

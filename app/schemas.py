@@ -56,3 +56,17 @@ class ChatAskRequest(BaseModel):
 class ChatAskResponse(BaseModel):
 	answer: str
 	context_chunks: list[str]
+
+class AuthLoginRequest(BaseModel):
+	username: str = Field(min_length=1)
+	password: str = Field(min_length=1)
+
+
+class AuthLoginResponse(BaseModel):
+	access_token: str
+	token_type: str = "bearer"
+
+
+class AuthMeResponse(BaseModel):
+	username: str
+	is_admin: bool

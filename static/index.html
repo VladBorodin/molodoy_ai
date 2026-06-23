@@ -9,7 +9,34 @@
 <body>
 	<div class="app">
 		<header class="app-header">
-			<p class="app-kicker">Локальный кото-ИИ</p>
+			<div class="kicker-row">
+				<p class="app-kicker">Локальный кото-ИИ</p>
+
+				<button
+					id="adminLoginButton"
+					class="secret-admin-button"
+					type="button"
+					title="Вход администратора"
+				>
+					🐾
+				</button>
+
+				<a
+					id="adminPanelLink"
+					class="admin-panel-link is-hidden"
+					href="/static/admin.html"
+				>
+					Админка
+				</a>
+
+				<button
+					id="adminLogoutButton"
+					class="admin-logout-button is-hidden"
+					type="button"
+				>
+					Выйти
+				</button>
+			</div>
 			<h1>How do you do, fellow kitts?</h1>
 			<p class="app-subtitle">
 				Задай вопрос о коте Молодом, а система найдет ответ в дневниковых записях.
@@ -59,6 +86,49 @@
 				</p>
 			</section>
 		</main>
+	</div>
+
+	<div id="adminLoginModal" class="modal-overlay is-hidden">
+		<div class="login-modal">
+			<div class="login-modal-header">
+				<div>
+					<p class="app-kicker">Вход администратора</p>
+					<h2>Панель Молодого</h2>
+				</div>
+
+				<button id="adminLoginCloseButton" class="modal-close-button" type="button">
+					×
+				</button>
+			</div>
+
+			<form id="adminLoginForm" class="login-form">
+				<label for="adminUsername">Логин</label>
+				<input
+					id="adminUsername"
+					type="text"
+					autocomplete="username"
+					placeholder="admin"
+					required
+				>
+
+				<label for="adminPassword">Пароль</label>
+				<input
+					id="adminPassword"
+					type="password"
+					autocomplete="current-password"
+					placeholder="password"
+					required
+				>
+
+				<p id="adminLoginError" class="login-error is-hidden">
+					Неверный логин или пароль.
+				</p>
+
+				<button type="submit">
+					Войти
+				</button>
+			</form>
+		</div>
 	</div>
 
 	<script src="/static/script.js"></script>

@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_database_session
+from app.dependencies.auth_dependencies import require_admin
 from app.models import KnowledgeChunk
 from app.models import KnowledgeEntry
 from app.schemas import KnowledgeEntryCreateRequest
@@ -18,7 +19,8 @@ from app.services.chunk_service import ChunkService
 
 router = APIRouter(
 	prefix="/admin",
-	tags=["Admin"]
+	tags=["Admin"],
+	dependencies=[Depends(require_admin)]
 )
 
 
