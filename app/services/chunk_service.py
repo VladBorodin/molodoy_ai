@@ -6,72 +6,60 @@ class ChunkService:
 		self,
 		text: str,
 		chunk_size: int = 900,
-		overlap_size: int = 150
+		overlap_sentences: int = 1,
+		max_overlap_length: int = 220
 	) -> list[str]:
 		normalized_text = self._normalize_text(text)
 
 		if not normalized_text:
 			return []
 
-		paragraphs = self._split_into_paragraphs(normalized_text)
+		text_units = self._split_text_to_units(
+			text=normalized_text,
+			chunk_size=chunk_size
+		)
 
 		chunks = []
-		current_chunk_parts = []
-		current_chunk_length = 0
+		current_units = []
 
-		for paragraph in paragraphs:
-			paragraph_parts = self._split_large_text_part(
-				text_part=paragraph,
-				chunk_size=chunk_size
-			)
+		for text_unit in text_units:
+			text_unit = text_unit.strip()
 
-			for paragraph_part in paragraph_parts:
-				paragraph_part_length = len(paragraph_part)
+			if not text_unit:
+				continue
 
-				if paragraph_part_length > chunk_size:
-					self._flush_current_chunk(
-						chunks=chunks,
-						current_chunk_parts=current_chunk_parts
-					)
+			if len(text_unit) > chunk_size:
+				self._flush_current_chunk(chunks, current_units)
+				current_units.clear()
 
-					current_chunk_parts.clear()
-					current_chunk_length = 0
+				long_parts = self._split_long_unit_by_words(
+					text_unit=text_unit,
+					chunk_size=chunk_size
+				)
 
-					hard_chunks = self._split_by_length(
-						text=paragraph_part,
-						chunk_size=chunk_size,
-						overlap_size=overlap_size
-					)
+				chunks.extend(long_parts)
+				continue
 
-					chunks.extend(hard_chunks)
-					continue
+			candidate_units = current_units + [text_unit]
+			candidate_text = self._join_units(candidate_units)
 
-				if current_chunk_length + paragraph_part_length + 2 > chunk_size:
-					self._flush_current_chunk(
-						chunks=chunks,
-						current_chunk_parts=current_chunk_parts
-					)
+			if current_units and len(candidate_text) > chunk_size:
+				self._flush_current_chunk(chunks, current_units)
 
-					overlap_text = self._build_overlap_text(
-						chunks=chunks,
-						overlap_size=overlap_size
-					)
+				current_units = self._build_sentence_overlap(
+					source_units=current_units,
+					overlap_sentences=overlap_sentences,
+					max_overlap_length=max_overlap_length
+				)
 
-					current_chunk_parts.clear()
+				candidate_with_overlap = self._join_units(current_units + [text_unit])
 
-					if overlap_text:
-						current_chunk_parts.append(overlap_text)
-						current_chunk_length = len(overlap_text)
-					else:
-						current_chunk_length = 0
+				if len(candidate_with_overlap) > chunk_size:
+					current_units.clear()
 
-				current_chunk_parts.append(paragraph_part)
-				current_chunk_length += paragraph_part_length + 2
+			current_units.append(text_unit)
 
-		self._flush_current_chunk(
-			chunks=chunks,
-			current_chunk_parts=current_chunk_parts
-		)
+		self._flush_current_chunk(chunks, current_units)
 
 		return self._remove_duplicate_chunks(chunks)
 
@@ -82,6 +70,29 @@ class ChunkService:
 
 		return text.strip()
 
+	def _split_text_to_units(self, text: str, chunk_size: int) -> list[str]:
+		paragraphs = self._split_into_paragraphs(text)
+		text_units = []
+
+		for paragraph in paragraphs:
+			sentences = self._split_into_sentences(paragraph)
+
+			if not sentences:
+				continue
+
+			for sentence in sentences:
+				if len(sentence) <= chunk_size:
+					text_units.append(sentence)
+				else:
+					text_units.extend(
+						self._split_long_unit_by_words(
+							text_unit=sentence,
+							chunk_size=chunk_size
+						)
+					)
+
+		return text_units
+
 	def _split_into_paragraphs(self, text: str) -> list[str]:
 		paragraphs = re.split(r"\n\s*\n", text)
 
@@ -91,52 +102,8 @@ class ChunkService:
 			if paragraph.strip()
 		]
 
-	def _split_large_text_part(self, text_part: str, chunk_size: int) -> list[str]:
-		if len(text_part) <= chunk_size:
-			return [text_part]
-
-		sentences = self._split_into_sentences(text_part)
-
-		if not sentences:
-			return [text_part]
-
-		parts = []
-		current_part_sentences = []
-		current_part_length = 0
-
-		for sentence in sentences:
-			sentence_length = len(sentence)
-
-			if sentence_length > chunk_size:
-				if current_part_sentences:
-					parts.append(" ".join(current_part_sentences).strip())
-					current_part_sentences.clear()
-					current_part_length = 0
-
-				parts.append(sentence)
-				continue
-
-			if current_part_length + sentence_length + 1 > chunk_size:
-				if current_part_sentences:
-					parts.append(" ".join(current_part_sentences).strip())
-
-				current_part_sentences = [sentence]
-				current_part_length = sentence_length
-			else:
-				current_part_sentences.append(sentence)
-				current_part_length += sentence_length + 1
-
-		if current_part_sentences:
-			parts.append(" ".join(current_part_sentences).strip())
-
-		return [
-			part
-			for part in parts
-			if part
-		]
-
 	def _split_into_sentences(self, text: str) -> list[str]:
-		sentences = re.split(r"(?<=[.!?])\s+", text)
+		sentences = re.split(r"(?<=[.!?…])\s+", text)
 
 		return [
 			sentence.strip()
@@ -144,61 +111,105 @@ class ChunkService:
 			if sentence.strip()
 		]
 
-	def _split_by_length(
+	def _split_long_unit_by_words(self, text_unit: str, chunk_size: int) -> list[str]:
+		words = text_unit.split()
+
+		if not words:
+			return []
+
+		parts = []
+		current_words = []
+
+		for word in words:
+			if len(word) > chunk_size:
+				if current_words:
+					parts.append(" ".join(current_words).strip())
+					current_words.clear()
+
+				parts.extend(self._split_very_long_word(word, chunk_size))
+				continue
+
+			candidate_words = current_words + [word]
+			candidate_text = " ".join(candidate_words)
+
+			if current_words and len(candidate_text) > chunk_size:
+				parts.append(" ".join(current_words).strip())
+				current_words = [word]
+			else:
+				current_words.append(word)
+
+		if current_words:
+			parts.append(" ".join(current_words).strip())
+
+		return [
+			part
+			for part in parts
+			if part
+		]
+
+	def _split_very_long_word(self, word: str, chunk_size: int) -> list[str]:
+		parts = []
+
+		for start_position in range(0, len(word), chunk_size):
+			part = word[start_position:start_position + chunk_size].strip()
+
+			if part:
+				parts.append(part)
+
+		return parts
+
+	def _build_sentence_overlap(
 		self,
-		text: str,
-		chunk_size: int,
-		overlap_size: int
+		source_units: list[str],
+		overlap_sentences: int,
+		max_overlap_length: int
 	) -> list[str]:
-		chunks = []
-		start_position = 0
+		if overlap_sentences <= 0 or max_overlap_length <= 0:
+			return []
 
-		while start_position < len(text):
-			end_position = start_position + chunk_size
-			chunk = text[start_position:end_position].strip()
+		overlap_units = []
 
-			if chunk:
-				chunks.append(chunk)
+		for source_unit in reversed(source_units):
+			if not self._looks_like_complete_sentence(source_unit):
+				continue
 
-			if end_position >= len(text):
+			candidate_units = [source_unit] + overlap_units
+			candidate_text = self._join_units(candidate_units)
+
+			if len(candidate_text) > max_overlap_length:
 				break
 
-			start_position = end_position - overlap_size
+			overlap_units.insert(0, source_unit)
 
-			if start_position < 0:
-				start_position = 0
+			if len(overlap_units) >= overlap_sentences:
+				break
 
-		return chunks
+		return overlap_units
+
+	def _looks_like_complete_sentence(self, text: str) -> bool:
+		cleaned_text = text.strip().rstrip("»”\"')]}")
+
+		return cleaned_text.endswith((".", "!", "?", "…"))
 
 	def _flush_current_chunk(
 		self,
 		chunks: list[str],
-		current_chunk_parts: list[str]
+		current_units: list[str]
 	) -> None:
-		if not current_chunk_parts:
+		if not current_units:
 			return
 
-		chunk = "\n\n".join(current_chunk_parts).strip()
+		chunk = self._join_units(current_units)
 
 		if chunk:
 			chunks.append(chunk)
 
-	def _build_overlap_text(self, chunks: list[str], overlap_size: int) -> str:
-		if not chunks or overlap_size <= 0:
-			return ""
-
-		last_chunk = chunks[-1]
-
-		if len(last_chunk) <= overlap_size:
-			return last_chunk
-
-		overlap_text = last_chunk[-overlap_size:].strip()
-		first_space_index = overlap_text.find(" ")
-
-		if first_space_index > 0:
-			overlap_text = overlap_text[first_space_index + 1:].strip()
-
-		return overlap_text
+	def _join_units(self, units: list[str]) -> str:
+		return " ".join(
+			unit.strip()
+			for unit in units
+			if unit.strip()
+		).strip()
 
 	def _remove_duplicate_chunks(self, chunks: list[str]) -> list[str]:
 		unique_chunks = []
@@ -214,6 +225,6 @@ class ChunkService:
 				continue
 
 			seen_chunks.add(normalized_chunk)
-			unique_chunks.append(chunk)
+			unique_chunks.append(normalized_chunk)
 
 		return unique_chunks
