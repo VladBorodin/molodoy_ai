@@ -1,12 +1,15 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 
 from app.database import get_database_session
 from app.models import ChatMessage
 from app.models import KnowledgeChunk
+from app.models import KnowledgeEntry
 from app.schemas import ChatAskRequest
 from app.schemas import ChatAskResponse
+from app.schemas import ChatSourceResponse
 from app.services.answer_service import AnswerService
 from app.services.search_service import SearchService
 
@@ -25,26 +28,24 @@ def ask_question(
 	chunks = (
 		database_session
 		.query(KnowledgeChunk)
+		.options(joinedload(KnowledgeChunk.entry))
+		.join(KnowledgeEntry, KnowledgeChunk.entry_id == KnowledgeEntry.id)
+		.filter(KnowledgeEntry.is_active.is_(True))
 		.order_by(KnowledgeChunk.id.asc())
 		.all()
 	)
 
-	chunk_contents = [
-		chunk.content
-		for chunk in chunks
-	]
-
 	search_service = SearchService()
 	answer_service = AnswerService()
 
-	relevant_chunks = search_service.find_relevant_chunks(
+	search_results = search_service.find_relevant_chunks(
 		question=request.question,
-		chunk_contents=chunk_contents
+		chunks=chunks
 	)
 
 	answer = answer_service.build_answer(
 		question=request.question,
-		context_chunks=relevant_chunks
+		search_results=search_results
 	)
 
 	user_message = ChatMessage(
@@ -63,5 +64,18 @@ def ask_question(
 
 	return ChatAskResponse(
 		answer=answer,
-		context_chunks=relevant_chunks
+		context_chunks=[
+			result.content
+			for result in search_results
+		],
+		sources=[
+			ChatSourceResponse(
+				entry_id=result.entry_id,
+				entry_title=result.entry_title,
+				chunk_id=result.chunk_id,
+				position=result.position,
+				score=result.score
+			)
+			for result in search_results
+		]
 	)

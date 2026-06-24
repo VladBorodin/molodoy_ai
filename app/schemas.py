@@ -53,9 +53,18 @@ class ChatAskRequest(BaseModel):
 	question: str = Field(min_length=1)
 
 
+class ChatSourceResponse(BaseModel):
+	entry_id: int
+	entry_title: str
+	chunk_id: int
+	position: int
+	score: int
+
+
 class ChatAskResponse(BaseModel):
 	answer: str
 	context_chunks: list[str]
+	sources: list[ChatSourceResponse]
 
 class AuthLoginRequest(BaseModel):
 	username: str = Field(min_length=1)
