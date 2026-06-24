@@ -44,12 +44,8 @@ class SearchService:
 				continue
 
 			results.append(
-				SearchResult(
-					chunk_id=chunk.id,
-					entry_id=chunk.entry_id,
-					entry_title=entry_title,
-					position=chunk.position,
-					content=chunk.content,
+				self._build_search_result(
+					chunk=chunk,
 					score=score
 				)
 			)
@@ -57,6 +53,71 @@ class SearchService:
 		results.sort(key=lambda item: item.score, reverse=True)
 
 		return results[:limit]
+
+	def get_general_context_chunks(
+		self,
+		chunks: list[KnowledgeChunk],
+		limit: int | None = None
+	) -> list[SearchResult]:
+		limit = limit or settings.rag_max_context_chunks
+
+		if not chunks:
+			return []
+
+		selected_results = []
+		selected_chunk_ids = set()
+		used_entry_ids = set()
+
+		# Сначала берём первые чанки разных записей, чтобы дать ИИ обзор базы знаний.
+		for chunk in chunks:
+			if chunk.entry_id in used_entry_ids:
+				continue
+
+			selected_results.append(
+				self._build_search_result(
+					chunk=chunk,
+					score=0
+				)
+			)
+
+			selected_chunk_ids.add(chunk.id)
+			used_entry_ids.add(chunk.entry_id)
+
+			if len(selected_results) >= limit:
+				return selected_results
+
+		# Если записей мало, добираем оставшиеся чанки по порядку.
+		for chunk in chunks:
+			if chunk.id in selected_chunk_ids:
+				continue
+
+			selected_results.append(
+				self._build_search_result(
+					chunk=chunk,
+					score=0
+				)
+			)
+
+			if len(selected_results) >= limit:
+				break
+
+		return selected_results
+
+	def _build_search_result(
+		self,
+		chunk: KnowledgeChunk,
+		score: int
+	) -> SearchResult:
+		entry_title = chunk.entry.title if chunk.entry else ""
+
+		return SearchResult(
+			chunk_id=chunk.id,
+			entry_id=chunk.entry_id,
+			entry_title=entry_title,
+			position=chunk.position,
+			content=chunk.content,
+			score=score
+		)
 
 	def _calculate_score(
 		self,
@@ -79,14 +140,9 @@ class SearchService:
 
 		score = 0
 
-		# Точное совпадение слов в тексте чанка.
 		score += len(exact_chunk_matches) * 10
-
-		# Точное совпадение слов в названии записи важнее.
 		score += len(exact_title_matches) * 15
 
-		# Совпадение по упрощённой основе слова.
-		# Например: молодой / молодого / молодому -> молод.
 		score += len(stem_chunk_matches) * 5
 		score += len(stem_title_matches) * 8
 
@@ -116,11 +172,15 @@ class SearchService:
 		}
 
 	def _build_stems(self, words: set[str]) -> set[str]:
-		return {
-			self._stem_word(word)
-			for word in words
-			if self._stem_word(word)
-		}
+		stems = set()
+
+		for word in words:
+			stem = self._stem_word(word)
+
+			if stem:
+				stems.add(stem)
+
+		return stems
 
 	def _stem_word(self, word: str) -> str:
 		if len(word) <= 4:

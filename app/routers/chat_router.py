@@ -43,6 +43,11 @@ def ask_question(
 		chunks=chunks
 	)
 
+	if not search_results:
+		search_results = search_service.get_general_context_chunks(
+			chunks=chunks
+		)
+
 	answer = answer_service.build_answer(
 		question=request.question,
 		search_results=search_results
