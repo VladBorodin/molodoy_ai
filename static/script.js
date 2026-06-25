@@ -3,9 +3,13 @@ const answerText = document.getElementById("answerText");
 const questionForm = document.getElementById("questionForm");
 const questionInput = document.getElementById("questionInput");
 const statusText = document.getElementById("statusText");
+const catNoseButton = document.getElementById("catNoseButton");
+const catReactionText = document.getElementById("catReactionText");
 
 const catIdleImagePath = "/static/assets/cat_idle.png";
 const catTalkingImagePath = "/static/assets/cat_talking.png";
+const catAnnoyedImagePath = "/static/assets/cat_annoyed.png";
+const catAlertImagePath = "/static/assets/cat_alert.png";
 
 const adminLoginButton = document.getElementById("adminLoginButton");
 const adminPanelLink = document.getElementById("adminPanelLink");
@@ -21,6 +25,8 @@ const adminTokenStorageKey = "molodoy_admin_token";
 
 let typingIntervalId = null;
 let mouthAnimationIntervalId = null;
+let reactionTimeoutId = null;
+let isAnswerTyping = false;
 
 questionForm.addEventListener("submit", async function (event) {
 	event.preventDefault();
@@ -34,6 +40,8 @@ questionForm.addEventListener("submit", async function (event) {
 	questionInput.disabled = true;
 	statusText.textContent = "Молодой думает...";
 	answerText.textContent = "";
+	clearCatReaction();
+	catImage.src = catAlertImagePath;
 
 	try {
 		const answer = await getAnswerFromBackend(question);
@@ -85,12 +93,15 @@ function typeAnswer(answer) {
 		let currentIndex = 0;
 		answerText.textContent = "";
 
+		isAnswerTyping = true;
+		clearCatReaction();
 		startMouthAnimation();
 
 		typingIntervalId = setInterval(function () {
 			if (currentIndex >= answer.length) {
 				clearTyping();
 				stopMouthAnimation();
+				isAnswerTyping = false;
 				catImage.src = catIdleImagePath;
 				resolve();
 				return;
@@ -136,6 +147,14 @@ initializeAdminAuth();
 
 function initializeAdminAuth() {
 	updateAdminMenuState();
+
+	adminLoginButton.addEventListener("mouseenter", function () {
+		showCatReaction(
+			catAlertImagePath,
+			"Что там шуршит?",
+			1200
+		);
+	});
 
 	adminLoginButton.addEventListener("click", function () {
 		openAdminLoginModal();
@@ -237,4 +256,53 @@ function showAdminLoginError() {
 
 function hideAdminLoginError() {
 	adminLoginError.classList.add("is-hidden");
+}
+
+catNoseButton.addEventListener("click", function () {
+	showCatReaction(
+		catAnnoyedImagePath,
+		getRandomPhrase([
+			"Эй, хватит.",
+			"Нос не кнопка.",
+			"Ты сейчас доиграешься.",
+			"Лапой по руке дать?",
+			"Без фамильярностей, кожаный."
+		]),
+		1800
+	);
+});
+
+function showCatReaction(imagePath, phrase, durationMs) {
+	if (isAnswerTyping) {
+		return;
+	}
+
+	clearCatReaction();
+	stopMouthAnimation();
+
+	catImage.src = imagePath;
+	catReactionText.textContent = phrase;
+	catReactionText.classList.remove("is-hidden");
+
+	reactionTimeoutId = setTimeout(function () {
+		catImage.src = catIdleImagePath;
+		catReactionText.classList.add("is-hidden");
+		reactionTimeoutId = null;
+	}, durationMs);
+}
+
+function clearCatReaction() {
+	if (reactionTimeoutId) {
+		clearTimeout(reactionTimeoutId);
+		reactionTimeoutId = null;
+	}
+
+	catReactionText.classList.add("is-hidden");
+	catReactionText.textContent = "";
+}
+
+function getRandomPhrase(phrases) {
+	const index = Math.floor(Math.random() * phrases.length);
+
+	return phrases[index];
 }

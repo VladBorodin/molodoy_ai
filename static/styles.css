@@ -733,3 +733,73 @@ body {
 		max-height: none;
 	}
 }
+
+.cat-character {
+	position: relative;
+	display: inline-flex;
+	align-items: flex-end;
+	justify-content: center;
+	width: min(560px, 115%);
+	max-width: 100%;
+}
+
+.cat-character .cat-image {
+	width: 100%;
+	max-height: 720px;
+	object-fit: contain;
+}
+
+.cat-nose-button {
+	position: absolute;
+	left: 61%;
+	top: 39%;
+	width: 48px;
+	height: 42px;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	cursor: pointer;
+	z-index: 10;
+	transform: translate(-50%, -50%);
+}
+
+.cat-nose-button:hover {
+	background: rgba(255, 255, 255, 0.08);
+	box-shadow: 0 0 24px rgba(255, 255, 255, 0.16);
+}
+
+.cat-reaction-text {
+	position: absolute;
+	left: 24px;
+	right: 24px;
+	bottom: 24px;
+	margin: 0;
+	padding: 14px 18px;
+	color: var(--text);
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.4;
+	border: 1px solid var(--border);
+	border-radius: 18px;
+	background:
+		linear-gradient(135deg, rgba(255, 59, 59, 0.16), rgba(255, 255, 255, 0.04)),
+		rgba(15, 17, 23, 0.86);
+	box-shadow: 0 18px 50px rgba(0, 0, 0, 0.38);
+	backdrop-filter: blur(10px);
+}
+
+@media (max-width: 980px) {
+	.cat-nose-button {
+		left: 61%;
+		top: 39%;
+		width: 42px;
+		height: 38px;
+	}
+
+	.cat-reaction-text {
+		left: 16px;
+		right: 16px;
+		bottom: 16px;
+		font-size: 14px;
+	}
+}

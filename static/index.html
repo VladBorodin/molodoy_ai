@@ -45,12 +45,24 @@
 
 		<main class="chat-layout">
 			<section class="cat-section" aria-label="Кот Молодой">
-				<img
-                    id="catImage"
-                    class="cat-image"
-                    src="/static/assets/cat_idle.png"
-                    alt="Кот Молодой со скейтом"
-                >
+				<div class="cat-character">
+					<img
+						id="catImage"
+						class="cat-image"
+						src="/static/assets/cat_idle.png"
+						alt="Кот Молодой со скейтом"
+					>
+
+					<button
+						id="catNoseButton"
+						class="cat-nose-button"
+						type="button"
+						aria-label="Потрогать нос кота"
+						title="Потрогать нос"
+					></button>
+				</div>
+
+				<p id="catReactionText" class="cat-reaction-text is-hidden"></p>
 			</section>
 
 			<section class="chat-section" aria-label="Чат">
